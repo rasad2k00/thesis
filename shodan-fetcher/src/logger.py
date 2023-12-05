@@ -1,6 +1,7 @@
 import logging
 import sys
 
+
 # Setting up logger with the appropriate handler
 def setup_logger(log_level=logging.DEBUG, filename="shodan-fetcher.log"):
     logging.basicConfig(filename=filename)
@@ -12,4 +13,3 @@ def setup_logger(log_level=logging.DEBUG, filename="shodan-fetcher.log"):
 
     logger.addHandler(handler)
     return logger
-    

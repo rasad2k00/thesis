@@ -1,28 +1,33 @@
-from shodan import Shodan
-from logger import setup_logger
-import sys
 import os
+import sys
+
+from logger import setup_logger
+from shodan import Shodan
 
 logger = setup_logger()
 
 
-def search_shodan(api, query):
+def search_shodan(client, query):
     # Make a shodan query
-    result = api.search('country:hu')
-    logger.info(f"Query run")
+    result = client.search(query)
+    logger.info(f"Query run: {query}")
+    return result
 
-def setup_shodan_connection():
-    api_key = os.getenv("SHODAN_API_KEY")
-    if api_key is None:
+
+def get_shodan_client():
+    key = os.getenv("SHODAN_KEY")
+    if key is None:
         logger.info("Please provide your API key!")
-        sys.exit(-1)
-    api = Shodan(api_key)
-    return api
+        sys.exit(1)
+    client = Shodan(key)
+    return client
 
 
 def main():
-    api = setup_shodan_connection()
-    search_shodan(api)
+    client = get_shodan_client()
+    query = "country:hu"
+    result = search_shodan(client, query)
+    print(f"[*] Result: {result}")
 
 
 if __name__ == "__main__":
