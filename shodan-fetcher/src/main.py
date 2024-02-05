@@ -2,21 +2,31 @@ import os
 import sys
 
 from dotenv import load_dotenv
-from logger import setup_logger
+from psycopg2.extras import Json
 from shodan import Shodan
+
+from utils.db import setup_db_connection, write_to_database
+from utils.logger import setup_logger
 
 load_dotenv()
 logger = setup_logger()
 
 
-def search_shodan(clients, query):
-    result = []
-    result_count = 1
-    for i in range(result_count):
+def sanitize_json(data):
+    data = Json(str(data).replace("\u0000", ""))
+    return data
+
+
+def search_shodan(clients, query, conn):
+    result_count = 50
+    for i in range(1, result_count + 1):
         client = clients[i % len(clients)]
-        result.append(client.search(query))
+        # In order to get multiple pages of results,
+        # we can use page parameter in search function
+        result = client.search(query, page=i)
+        data = sanitize_json(result)
+        write_to_database(conn, data)
         logger.info(f"Query run: {query}")
-    return result
 
 
 def get_shodan_clients(keys):
@@ -39,8 +49,8 @@ def main():
     keys = read_keys()
     clients = get_shodan_clients(keys)
     query = "country:hu"
-    result = search_shodan(clients, query)
-    print(f"Result: {result}")
+    conn = setup_db_connection()
+    search_shodan(clients, query, conn)
 
 
 if __name__ == "__main__":
