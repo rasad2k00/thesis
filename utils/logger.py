@@ -13,3 +13,6 @@ def setup_logger(log_level=logging.DEBUG, filename="shodan-fetcher.log"):
 
     logger.addHandler(handler)
     return logger
+
+
+logger = setup_logger()

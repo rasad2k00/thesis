@@ -4,10 +4,9 @@ from datetime import datetime
 import psycopg2
 from dotenv import load_dotenv
 
-from utils.logger import setup_logger
+from utils.logger import logger
 
 load_dotenv()
-logger = setup_logger()
 
 
 def setup_db_connection():

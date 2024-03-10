@@ -1,40 +1,36 @@
 import os
 import sys
 
+import requests
 from dotenv import load_dotenv
-from psycopg2.extras import Json
-from shodan import Shodan
 
-from utils.db import setup_db_connection, write_to_database
-from utils.logger import setup_logger
+from utils.logger import logger
 
 load_dotenv()
-logger = setup_logger()
 
 
-def sanitize_json(data):
-    data = Json(str(data).replace("\u0000", ""))
-    return data
+def write_to_file(data, filename="shodan_data.txt"):
+    with open(filename, "a") as f:
+        f.write(data)
+        f.close()
 
 
-def search_shodan(clients, query, conn):
-    result_count = 50
+def search_shodan(keys, query):
+    result_count = 400
     for i in range(1, result_count + 1):
-        client = clients[i % len(clients)]
-        # In order to get multiple pages of results,
-        # we can use page parameter in search function
-        result = client.search(query, page=i)
-        data = sanitize_json(result)
-        write_to_database(conn, data)
+        key = keys[i % len(keys)]
+        result = send_shodan_request(key, query, page=i)
+        if result.status_code != 200:
+            continue
+        write_to_file(result.text)
         logger.info(f"Query run: {query}")
 
 
-def get_shodan_clients(keys):
-    clients = []
-    for key in keys:
-        client = Shodan(key)
-        clients.append(client)
-    return clients
+def send_shodan_request(key, query, page=1):
+    base_url = "https://api.shodan.io/shodan/host/search"
+    params = {"query": query, "page": page, "key": key}
+    result = requests.get(base_url, params=params)
+    return result
 
 
 def read_keys():
@@ -47,10 +43,8 @@ def read_keys():
 
 def main():
     keys = read_keys()
-    clients = get_shodan_clients(keys)
     query = "country:hu"
-    conn = setup_db_connection()
-    search_shodan(clients, query, conn)
+    search_shodan(keys, query)
 
 
 if __name__ == "__main__":
