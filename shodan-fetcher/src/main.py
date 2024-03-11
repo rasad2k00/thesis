@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 
@@ -9,21 +10,20 @@ from utils.logger import logger
 load_dotenv()
 
 
-def write_to_file(data, filename="shodan_data.txt"):
-    with open(filename, "a") as f:
-        f.write(data)
-        f.close()
-
-
 def search_shodan(keys, query):
-    result_count = 400
-    for i in range(1, result_count + 1):
+    start_page = 1
+    result_count = 100
+    results = []
+    for i in range(start_page, start_page + result_count):
         key = keys[i % len(keys)]
-        result = send_shodan_request(key, query, page=i)
-        if result.status_code != 200:
+        response = send_shodan_request(key, query, page=i)
+        if response.status_code != 200:
             continue
-        write_to_file(result.text)
+        data = response.json()
+        results.append(data)
         logger.info(f"Query run: {query}")
+    with open("shodan_data.json", "w") as f:
+        json.dump(results, f)
 
 
 def send_shodan_request(key, query, page=1):
