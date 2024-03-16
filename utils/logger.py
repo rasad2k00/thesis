@@ -12,6 +12,7 @@ def setup_logger(log_level=logging.DEBUG, filename="shodan-fetcher.log"):
     handler.setLevel(log_level)
 
     logger.addHandler(handler)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
     return logger
 
 
