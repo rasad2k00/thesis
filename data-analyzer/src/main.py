@@ -66,7 +66,8 @@ def main():
         sys.exit(1)
     filename = sys.argv[1]
     results = fetch_from_file(filename=filename)
-    get_common_fields(results=results)
+    available_keys = get_available_keys(results=results)
+    print(available_keys)
 
 
 if __name__ == "__main__":
