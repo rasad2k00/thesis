@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 from datetime import datetime
 
@@ -57,6 +58,7 @@ def get_common_fields(results):
             )
             hash = matches[i].get("hash") if matches[i].get("hash") else None
             version = matches[i].get("version") if matches[i].get("version") else None
+            vulns = str(matches[i].get("vulns")) if matches[i].get("vulns") else None
             common_fields.append(
                 [
                     os,
@@ -70,6 +72,7 @@ def get_common_fields(results):
                     isp,
                     hash,
                     version,
+                    vulns,
                 ]
             )
     return common_fields
@@ -86,7 +89,7 @@ def setup_db_connection():
         sys.exit(1)
 
 
-def craete_table(conn):
+def create_table(conn):
     try:
         cur = conn.cursor()
         statement = """
@@ -103,7 +106,8 @@ def craete_table(conn):
             domains TEXT,
             isp VARCHAR(255),
             hash INT,
-            version VARCHAR(255)
+            version VARCHAR(255),
+            vulns TEXT
         );
         """
         cur.execute(statement)
@@ -119,9 +123,10 @@ def write_to_database(conn, fields):
     try:
         for field in fields:
             statement = f"""
-            INSERT INTO results (os, product, ip_str, port, org, timestamp, hostnames, domains, isp, hash, version)
+            INSERT INTO results (os, product, ip_str, port, org, timestamp, hostnames, domains, isp, hash, version, vulns)
             VALUES
                 (
+                    %s,
                     %s,
                     %s,
                     %s,
@@ -144,14 +149,11 @@ def write_to_database(conn, fields):
 
 if __name__ == "__main__":
     conn = setup_db_connection()
-    craete_table(conn)
+    create_table(conn)
     directory = "shodan-data/"
-    filenames = [
-        "shodan_camera.json",
-        "shodan_data.json",
-        "shodan_version.json",
-        "shodan_http.json",
-    ]
+    filenames = []
+    for filename in os.listdir(os.fsencode(directory)):
+        filenames.append(os.fsdecode(filename))
     for filename in filenames:
         results = fetch_from_file(directory + filename)
         common_fields = get_common_fields(results)
