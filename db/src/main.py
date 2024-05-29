@@ -56,9 +56,14 @@ def get_common_fields(results):
                 if matches[i].get("isp")
                 else None
             )
+            vulns = (
+                ",".join(matches[i].get("vulns")).replace("'", "")
+                if matches[i].get("vulns")
+                else None
+            )
             hash = matches[i].get("hash") if matches[i].get("hash") else None
+            city = matches[i].get("location")["city"] if matches[i].get("location") else None
             version = matches[i].get("version") if matches[i].get("version") else None
-            vulns = str(matches[i].get("vulns")) if matches[i].get("vulns") else None
             common_fields.append(
                 [
                     os,
@@ -71,6 +76,7 @@ def get_common_fields(results):
                     domains,
                     isp,
                     hash,
+                    city,
                     version,
                     vulns,
                 ]
@@ -106,6 +112,7 @@ def create_table(conn):
             domains TEXT,
             isp VARCHAR(255),
             hash INT,
+            city VARCHAR(255),
             version VARCHAR(255),
             vulns TEXT
         );
@@ -123,9 +130,10 @@ def write_to_database(conn, fields):
     try:
         for field in fields:
             statement = f"""
-            INSERT INTO results (os, product, ip_str, port, org, timestamp, hostnames, domains, isp, hash, version, vulns)
+            INSERT INTO results (os, product, ip_str, port, org, timestamp, hostnames, domains, isp, hash, city, version, vulns)
             VALUES
                 (
+                    %s,
                     %s,
                     %s,
                     %s,
