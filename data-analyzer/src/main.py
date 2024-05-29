@@ -1,5 +1,5 @@
 import json
-import sys
+import os
 
 
 def fetch_from_file(filename):
@@ -23,7 +23,11 @@ def get_common_fields(results):
             domains = matches[i].get("domains")
             isp = matches[i].get("isp")
             hash = matches[i].get("hash")
+            city = matches[i].get("location")
+            if not city:
+                continue
             version = matches[i].get("version")
+            vulns = matches[i].get("vulns")
             print(f"#{i}:")
             print(f"\tOS: {os}")
             print(f"\tProduct: {product}")
@@ -35,7 +39,12 @@ def get_common_fields(results):
             print(f"\tDomains: {domains}")
             print(f"\tISP: {isp}")
             print(f"\tHash: {hash}")
+            print(f"\tCity: {city}")
             print(f"\tVersion: {version}")
+            for vuln, v in vulns.items():
+                print(f"\tVuln: {vuln}, CVSS: {v.get('cvss')}")
+            break
+        break
 
 
 def get_available_keys(results):
@@ -66,8 +75,7 @@ def main():
         sys.exit(1)
     filename = sys.argv[1]
     results = fetch_from_file(filename=filename)
-    available_keys = get_available_keys(results=results)
-    print(available_keys)
+    get_common_fields(results)
 
 
 if __name__ == "__main__":
